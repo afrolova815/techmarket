@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Товары категории {{ category.name }}{% endblock %}
+{% block content %}
+<div class="catalog-header">
+  <h2>Категория: {{ category.name }}</h2>
+</div>
+
+<div class="products-grid">
+  {% for product in products %}
+  <div class="product-card">
+    {% if product.has_discount %}<div class="discount-badge">Скидка</div>{% endif %}
+    <div class="product-image">
+      <img src="{% static 'catalog/images/no-image.svg' %}" alt="{{ product.name }}">
+    </div>
+    <div class="product-info">
+      <h3>{{ product.name }}</h3>
+      <p class="brand">{{ product.brand.name }}</p>
+      <div class="price-section">
+        {% if product.has_discount %}<span class="old-price">{{ product.old_price }} руб.</span>{% endif %}
+        <span class="current-price">{{ product.price }} руб.</span>
+      </div>
+      <a href="{% url 'product_detail' product.slug %}" class="product-link">Подробнее</a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="no-products"><p>В этой категории пока нет товаров.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

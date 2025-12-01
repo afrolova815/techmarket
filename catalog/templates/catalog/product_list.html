@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">{{ title }}</h1>
+  <div class="filters-bar">
+    <div class="group">
+      <span class="label">Категории</span>
+      {% for cat in categories %}
+        <a href="?category={{ cat.slug }}" class="chip">{{ cat.name }}</a>
+      {% endfor %}
+    </div>
+    <div class="group">
+      <span class="label">Бренды</span>
+      {% for brand in brands %}
+        <a href="?brand={{ brand.slug }}" class="chip">{{ brand.name }}</a>
+      {% endfor %}
+    </div>
+    <div class="group group--break">
+      <span class="label">Теги</span>
+      {% for tag in tags %}
+        <a href="?tag={{ tag.slug }}" class="chip">#{{ tag.name }}</a>
+      {% endfor %}
+    </div>
+    <div class="group group--sorting">
+      <label class="label" for="sort">Сортировка</label>
+      <select id="sort" class="select" onchange="window.location.href='?sort='+this.value">
+        <option value="-created">Сначала новые</option>
+        <option value="price">Цена по возрастанию</option>
+        <option value="-price">Цена по убыванию</option>
+        <option value="name">По названию (А-Я)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="products-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <a href="{{ product.get_absolute_url }}" class="card-link-overlay" aria-label="Открыть {{ product.name }}"></a>
+        {% if product.has_discount %}
+        <div class="discount-badge">Скидка</div>
+        {% endif %}
+
+        <div class="product-image">
+            <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ product.name }}">
+        </div>
+
+        <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <p class="brand">{{ product.brand.name }}</p>
+
+        <div class="price-section">
+            {% if product.has_discount %}
+            <span class="old-price">{{ product.old_price }} руб.</span>
+            {% endif %}
+            <span class="current-price">{{ product.price }} руб.</span>
+            {% if product.discount_percent %}
+            <span class="current-price">(-{{ product.discount_percent|floatformat:0 }}%)</span>
+            {% endif %}
+        </div>
+
+            <div class="stock-info">
+                {% if product.quantity > 0 %}
+                <span class="in-stock">В наличии ({{ product.quantity }})</span>
+                {% else %}
+                <span class="out-of-stock">Нет в наличии</span>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+    {% empty %}
+    <div class="no-products">
+        <p>Товары не найдены</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="results-counter">
+  <span class="label">Найдено:</span>
+  <span class="label">{{ page_obj.paginator.count }} товаров</span>
+</div>
+
+<div class="pagination">
+  {% if page_obj %}
+    <div class="group">
+      {% if page_obj.has_previous %}
+        <a class="chip" href="?page={{ page_obj.previous_page_number }}">← Предыдущая</a>
+      {% endif %}
+      <span class="label">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a class="chip" href="?page={{ page_obj.next_page_number }}">Следующая →</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

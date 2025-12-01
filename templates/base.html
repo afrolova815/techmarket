@@ -1,0 +1,40 @@
+<!-- techmarket/templates/base.html -->
+{% load static %}
+{% load catalog_tags %}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TechMarket - Магазин цифровой техники{% endblock %}</title>
+    <link type="text/css" href="{% static "catalog/css/styles.css" %}?v=4" rel="stylesheet" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>TechMarket</h1>
+            <nav>
+                <a href="{% url "main_dashboard" %}">Главная</a>
+                <a href="{% url "product_list" %}">Каталог</a>
+
+                {% get_categories as categories %}
+                {% for category in categories %}
+                    <a href="{% url "category_detail" category.slug %}">{{ category.name }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 TechMarket. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>

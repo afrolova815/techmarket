@@ -1,0 +1,10 @@
+<!-- interface/templates/interface/index.html -->
+{% extends "base.html" %}
+
+{% block title %}Главная - TechMarket{% endblock %}
+
+{% block content %}
+<h2>Добро пожаловать в TechMarket!</h2>
+<p>Лучший выбор цифровой техники по отличным ценам.</p>
+<p>Посмотрите наш <a href="{% url "product_list" %}">каталог товаров</a>.</p>
+{% endblock %}

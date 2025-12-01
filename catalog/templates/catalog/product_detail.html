@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="product-detail">
+    <div class="product-gallery">
+        <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ product.name }}">
+    </div>
+    
+    <div class="product-details">
+        <h1>{{ product.name }}</h1>
+        <p class="brand-category">
+            Бренд: {{ product.brand.name }} | 
+            Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+        </p>
+        
+        <div class="price-section">
+            {% if product.has_discount %}
+            <div class="old-price">{{ product.old_price }} руб.</div>
+            <div class="current-price discount">{{ product.price }} руб.</div>
+            {% if savings %}
+            <div class="savings">Экономия: {{ savings|floatformat:0 }} руб.</div>
+            {% endif %}
+            {% else %}
+            <div class="current-price">{{ product.price }} руб.</div>
+            {% endif %}
+        </div>
+        
+        <div class="stock-status">
+            {% if product.quantity > 0 and product.is_available %}
+            <span class="in-stock">✓ В наличии</span>
+            <div class="quantity">Доступно: {{ product.quantity }} шт.</div>
+            {% else %}
+            <span class="out-of-stock">✗ Нет в наличии</span>
+            {% endif %}
+        </div>
+        
+        <div class="product-description">
+            <h3>Описание</h3>
+            <p>{{ product.description|linebreaks }}</p>
+        </div>
+
+        {% if product.details %}
+        <div class="product-details-block">
+            <h3>Характеристики</h3>
+            <p>Артикул: {{ product.details.sku }}</p>
+            <p>Гарантия: {{ product.details.warranty_months }} мес.</p>
+            {% if product.details.specs %}
+            <p>{{ product.details.specs|linebreaks }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if product.tags.all %}
+        <div class="product-tags">
+            <h3>Теги</h3>
+            {% for tag in product.tags.all %}
+            <a class="chip" href="?tag={{ tag.slug }}">#{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="product-actions">
+            {% if product.quantity > 0 and product.is_available %}
+            <button class="add-to-cart">Добавить в корзину</button>
+            {% else %}
+            <button class="notify-btn">Уведомить о поступлении</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if similar_products %}
+<div class="similar-products">
+    <h2>Похожие товары</h2>
+    <div class="products-grid">
+        {% for similar in similar_products %}
+        <div class="product-card">
+            <a href="{{ similar.get_absolute_url }}" class="card-link-overlay" aria-label="Открыть {{ similar.name }}"></a>
+            {% if similar.has_discount %}<div class="discount-badge">Скидка</div>{% endif %}
+            <div class="product-image">
+                <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ similar.name }}">
+            </div>
+            <div class="product-info">
+                <h3>{{ similar.name }}</h3>
+                <p class="brand">{{ similar.brand.name }}</p>
+                <div class="price-section">
+                    {% if similar.has_discount %}<span class="old-price">{{ similar.old_price }} руб.</span>{% endif %}
+                    <span class="current-price">{{ similar.price }} руб.</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+*.log
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.*
+
+# IDE/Tools
+.idea/
+.vscode/
+
+
+# Project specific files to ignore
+материалы для лабораторных/
+.editorconfig
+.flake8
+CODE_STYLE.md
+pyproject.toml
+
+# Node (if any)
+node_modules/
+
+# Misc
+*.tmp
+*.bak
