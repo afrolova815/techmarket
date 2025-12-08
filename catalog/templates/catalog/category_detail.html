@@ -9,6 +9,7 @@
 <div class="products-grid">
   {% for product in products %}
   <div class="product-card">
+    <a href="{{ product.get_absolute_url }}" class="card-link-overlay" aria-label="Открыть {{ product.name }}"></a>
     {% if product.has_discount %}<div class="discount-badge">Скидка</div>{% endif %}
     <div class="product-image">
       <img src="{% static 'catalog/images/no-image.svg' %}" alt="{{ product.name }}">
@@ -20,7 +21,6 @@
         {% if product.has_discount %}<span class="old-price">{{ product.old_price }} руб.</span>{% endif %}
         <span class="current-price">{{ product.price }} руб.</span>
       </div>
-      <a href="{% url 'product_detail' product.slug %}" class="product-link">Подробнее</a>
     </div>
   </div>
   {% empty %}

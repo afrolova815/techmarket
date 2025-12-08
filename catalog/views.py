@@ -8,49 +8,142 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 def display_products(request):
-    products = Product.objects.published()
-
-    category_slug = request.GET.get('category')
-    if category_slug:
-        products = products.filter(category__slug=category_slug)
-
-    brand_slug = request.GET.get('brand')
-    if brand_slug:
-        products = products.filter(brand__slug=brand_slug)
+    base_products = Product.objects.published()
 
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     if min_price:
-        products = products.filter(price__gte=min_price)
+        base_products = base_products.filter(price__gte=min_price)
     if max_price:
-        products = products.filter(price__lte=max_price)
+        base_products = base_products.filter(price__lte=max_price)
 
     search_query = request.GET.get('search')
     if search_query:
-        products = products.filter(
+        base_products = base_products.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
             Q(brand__name__icontains=search_query) |
             Q(category__name__icontains=search_query)
         )
-    tag_slug = request.GET.get('tag')
-    if tag_slug:
-        normalized_slug = slugify(tag_slug)
-        products = products.filter(
-            Q(tags__slug=tag_slug) |
-            Q(tags__slug=normalized_slug) |
-            Q(tags__name__iexact=tag_slug)
-        )
+
+    active_category_slugs = set()
+    active_brand_slugs = set()
+    active_tag_slugs = set()
+
+    single_category = request.GET.get('category')
+    single_brand = request.GET.get('brand')
+    single_tag = request.GET.get('tag')
+    if single_category:
+        active_category_slugs.add(single_category)
+    if single_brand:
+        active_brand_slugs.add(single_brand)
+    if single_tag:
+        active_tag_slugs.add(slugify(single_tag))
+
+    categories_param = request.GET.get('categories')
+    brands_param = request.GET.get('brands')
+    tags_param = request.GET.get('tags')
+    if categories_param:
+        for s in categories_param.split(','):
+            if s:
+                active_category_slugs.add(s)
+    if brands_param:
+        for s in brands_param.split(','):
+            if s:
+                active_brand_slugs.add(s)
+    if tags_param:
+        for s in tags_param.split(','):
+            if s:
+                active_tag_slugs.add(slugify(s))
+
+    for s in request.GET.getlist('categories'):
+        for val in s.split(','):
+            if val:
+                active_category_slugs.add(val)
+    for s in request.GET.getlist('brands'):
+        for val in s.split(','):
+            if val:
+                active_brand_slugs.add(val)
+    for s in request.GET.getlist('tags'):
+        for val in s.split(','):
+            if val:
+                active_tag_slugs.add(slugify(val))
+
+    for s in request.GET.getlist('category'):
+        if s:
+            active_category_slugs.add(s)
+    for s in request.GET.getlist('brand'):
+        if s:
+            active_brand_slugs.add(s)
+    for s in request.GET.getlist('tag'):
+        if s:
+            active_tag_slugs.add(slugify(s))
+
+    filtered_products = base_products
+    if active_category_slugs:
+        filtered_products = filtered_products.filter(category__slug__in=list(active_category_slugs))
+    if active_brand_slugs:
+        filtered_products = filtered_products.filter(brand__slug__in=list(active_brand_slugs))
+    if active_tag_slugs:
+        filtered_products = filtered_products.filter(tags__slug__in=list(active_tag_slugs)).distinct()
 
     sort = request.GET.get('sort', '-created')
     if sort in ['price', '-price', 'name', '-name', '-created']:
-        products = products.order_by(sort)
+        filtered_products = filtered_products.order_by(sort)
 
-    categories = Category.objects.all()
-    brands = Brand.objects.all()
-    tags = Tag.objects.all()
+    categories_counts_qs = base_products
+    if active_brand_slugs:
+        categories_counts_qs = categories_counts_qs.filter(brand__slug__in=list(active_brand_slugs))
+    if active_tag_slugs:
+        categories_counts_qs = categories_counts_qs.filter(tags__slug__in=list(active_tag_slugs)).distinct()
+    categories_counts = categories_counts_qs.values('category__slug', 'category__name').annotate(count=Count('id')).order_by('category__name')
 
-    products = products.annotate(
+    brands_counts_qs = base_products
+    if active_category_slugs:
+        brands_counts_qs = brands_counts_qs.filter(category__slug__in=list(active_category_slugs))
+    if active_tag_slugs:
+        brands_counts_qs = brands_counts_qs.filter(tags__slug__in=list(active_tag_slugs)).distinct()
+    brands_counts = brands_counts_qs.values('brand__slug', 'brand__name').annotate(count=Count('id')).order_by('brand__name')
+
+    tags_counts_qs = base_products
+    if active_category_slugs:
+        tags_counts_qs = tags_counts_qs.filter(category__slug__in=list(active_category_slugs))
+    if active_brand_slugs:
+        tags_counts_qs = tags_counts_qs.filter(brand__slug__in=list(active_brand_slugs))
+    tags_counts = tags_counts_qs.values('tags__slug', 'tags__name').exclude(tags__slug__isnull=True).annotate(count=Count('id')).order_by('tags__name')
+
+    facet_categories = [
+        {
+            'slug': c['category__slug'],
+            'name': c['category__name'],
+            'count': c['count'],
+            'active': c['category__slug'] in active_category_slugs
+        }
+        for c in categories_counts
+        if c['count'] > 0
+    ]
+    facet_brands = [
+        {
+            'slug': b['brand__slug'],
+            'name': b['brand__name'],
+            'count': b['count'],
+            'active': b['brand__slug'] in active_brand_slugs
+        }
+        for b in brands_counts
+        if b['count'] > 0
+    ]
+    facet_tags = [
+        {
+            'slug': t['tags__slug'],
+            'name': t['tags__name'],
+            'count': t['count'],
+            'active': t['tags__slug'] in active_tag_slugs
+        }
+        for t in tags_counts
+        if t['count'] > 0
+    ]
+
+    filtered_products = filtered_products.annotate(
         discount_percent=Case(
             When(old_price__gt=F('price'), then=(F('old_price') - F('price')) * 100.0 / F('old_price')),
             default=Value(0.0),
@@ -64,18 +157,27 @@ def display_products(request):
         page_size = int(page_size)
     except Exception:
         page_size = 10
-    paginator = Paginator(products, page_size)
+    paginator = Paginator(filtered_products, page_size)
     try:
         page_obj = paginator.get_page(page)
     except EmptyPage:
         page_obj = paginator.get_page(paginator.num_pages)
 
+    qs = request.GET.copy()
+    if 'page' in qs:
+        del qs['page']
+
     context = {
         'products': page_obj.object_list,
         'page_obj': page_obj,
-        'categories': categories,
-        'brands': brands,
-        'tags': tags,
+        'facet_categories': facet_categories,
+        'facet_brands': facet_brands,
+        'facet_tags': facet_tags,
+        'active_category_slugs': list(active_category_slugs),
+        'active_brand_slugs': list(active_brand_slugs),
+        'active_tag_slugs': list(active_tag_slugs),
+        'sort': sort,
+        'querystring': qs.urlencode(),
         'title': 'Каталог товаров'
     }
     return render(request, 'catalog/product_list.html', context)
@@ -149,8 +251,6 @@ def legacy_redirect(request, old_id):
 
 def orm_examples(request):
     """Демонстрация различных ORM-запросов"""
-    
-    # CREATE - Создание новой записи
     new_product = Product.objects.create(
         name='Новый товар',
         slug='new-product',
@@ -159,36 +259,24 @@ def orm_examples(request):
         category=Category.objects.first(),
         brand=Brand.objects.first()
     )
-    
-    # READ - Выборка данных
     all_products = Product.objects.all()
     available_products = Product.objects.available()
     published_products = Product.objects.published()
     discounted_products = Product.objects.with_discount()
-    
-    # Фильтрация
     apple_products = Product.objects.filter(brand__name='Apple')
     expensive_products = Product.objects.filter(price__gt=50000)
     smartphones = Product.objects.filter(category__name='Смартфоны')
-    
-    # Сложные запросы
     products_with_brand_category = Product.objects.select_related('brand', 'category')
     products_ordered_by_price = Product.objects.order_by('-price')
-    
-    # Агрегации
     price_stats = Product.objects.aggregate(
         avg_price=Avg('price'),
         total_products=Count('id'),
         total_value=Sum('price')
     )
-    
-    # Группировки
     products_by_brand = Product.objects.values('brand__name').annotate(
         count=Count('id'),
         avg_price=Avg('price')
     )
-
-    # Вычисляемые поля и Value
     annotated = Product.objects.annotate(
         discount_percent=Case(
             When(old_price__gt=F('price'), then=(F('old_price') - F('price')) * 100.0 / F('old_price')),
@@ -197,13 +285,7 @@ def orm_examples(request):
         ),
         label=Value('ORM demo', output_field=CharField())
     ).values('name', 'discount_percent', 'label')[:5]
-    
-    # UPDATE - Обновление записей
     Product.objects.filter(brand__name='Apple').update(price=F('price') * 0.9)
-    
-    # DELETE - Удаление записей (комментируем для безопасности)
-    # Product.objects.filter(quantity=0, is_available=False).delete()
-    
     context = {
         'total_products': all_products.count(),
         'available_count': available_products.count(),
@@ -212,7 +294,6 @@ def orm_examples(request):
         'products_by_brand': list(products_by_brand),
         'annotated': list(annotated),
     }
-    
     return JsonResponse(context)
 
 @csrf_exempt

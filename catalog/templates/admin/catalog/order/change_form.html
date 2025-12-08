@@ -1,0 +1,39 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_related_objects %}
+  {{ block.super }}
+  <div class="order-add-item-block">
+    {% if original.status == original.Status.NEW %}
+      <a class="add-item-trigger" href="#add-item-modal">Добавить товар</a>
+    {% endif %}
+  </div>
+
+  <div id="add-item-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 class="modal-title">Добавить товар в заказ</h3>
+      <form method="get" action="?#add-item-modal" class="modal-search">
+        <input type="text" name="q" value="{{ add_product_query }}" placeholder="Поиск по названию/артикулу" class="modal-input" />
+        <button type="submit" class="modal-btn">Найти</button>
+      </form>
+      <form method="post" action="{% url 'admin:orderitem_add_inline' original.id %}" class="modal-add-form">
+        {% csrf_token %}
+        <div class="add-item-list">
+          {% for p in add_product_results %}
+            <label class="add-item-row">
+              <input type="radio" name="product_id" value="{{ p.id }}">
+              <span class="add-item-name">{{ p.name }}</span>
+              <span class="add-item-meta">{{ p.brand }} • {{ p.category }}</span>
+            </label>
+          {% empty %}
+            <div class="empty">Нет результатов</div>
+          {% endfor %}
+        </div>
+        <div class="modal-actions">
+          <input type="number" name="quantity" min="1" value="1" class="modal-input" />
+          <button type="submit" class="modal-btn primary">Добавить</button>
+          <a href="#" class="modal-btn">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
