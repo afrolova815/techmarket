@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.http import HttpResponse
 
 handler404 = "interface.views.resource_not_found"
 
@@ -23,4 +24,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("catalog/", include("catalog.urls")),
     path("", include("interface.urls")),
+    path("@vite/client", lambda request: HttpResponse("", content_type="text/javascript")),
 ]
+
+# Admin branding
+admin.site.site_header = "Панель администрирования TechMarket"
+admin.site.site_title = "Админка TechMarket"
+admin.site.index_title = "Управление контентом TechMarket"

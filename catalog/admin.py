@@ -1,6 +1,26 @@
 from django.contrib import admin
+from django.contrib import messages
 from django.utils.safestring import mark_safe
+from django.db.models import F
 from .models import Category, Brand, Product, Tag, ProductDetail, Order, OrderItem
+
+class HasDiscountFilter(admin.SimpleListFilter):
+    title = 'Со скидкой'
+    parameter_name = 'has_discount'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Да'),
+            ('no', 'Нет'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'yes':
+            return queryset.filter(old_price__gt=F('price'))
+        if value == 'no':
+            return queryset.exclude(old_price__gt=F('price'))
+        return queryset
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -17,13 +37,14 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'price', 'old_price', 'category', 'brand', 'is_available', 'status', 'created']
-    list_filter = ['category', 'brand', 'is_available', 'status', 'created', 'tags']
+    list_display = ['name', 'price', 'old_price', 'discount_percent_edit', 'category', 'brand', 'is_available', 'status', 'created']
+    list_filter = ['category', 'brand', 'is_available', 'status', 'created', 'tags', HasDiscountFilter]
     search_fields = ['name', 'description']
     list_editable = ['price', 'is_available', 'status']
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ['created', 'updated']
     filter_horizontal = ['tags']
+    actions = ['mark_published', 'mark_unavailable', 'apply_discount_10']
     
     fieldsets = (
         ('Основная информация', {
@@ -43,6 +64,88 @@ class ProductAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+
+    def discount_percent_edit(self, obj):
+        try:
+            if obj.old_price and obj.old_price > obj.price:
+                percent = (float(obj.old_price) - float(obj.price)) * 100.0 / float(obj.old_price)
+            else:
+                percent = 0.0
+            return mark_safe(
+                f'<div class="discount-editor" data-product-id="{obj.id}">' \
+                f'<input type="number" min="0" max="99" step="1" class="discount-input" value="{percent:.0f}" />%' \
+                f'</div>'
+            )
+        except Exception:
+            return mark_safe('<span>-</span>')
+    discount_percent_edit.short_description = 'Скидка %'
+
+    def mark_published(self, request, queryset):
+        updated = queryset.update(status=Product.Status.PUBLISHED, is_available=True)
+        messages.success(request, f"Опубликовано и доступно: {updated} товаров")
+    mark_published.short_description = 'Опубликовать и сделать доступными'
+
+    def mark_unavailable(self, request, queryset):
+        updated = queryset.update(is_available=False)
+        messages.warning(request, f"Недоступно: {updated} товаров")
+    mark_unavailable.short_description = 'Сделать недоступными'
+
+    def apply_discount_10(self, request, queryset):
+        count = 0
+        for p in queryset:
+            try:
+                old = float(p.price)
+                p.old_price = p.old_price or old
+                p.price = old * 0.9
+                p.save(update_fields=['price','old_price'])
+                count += 1
+            except Exception:
+                pass
+        messages.info(request, f"Скидка 10% применена к {count} товарам")
+    apply_discount_10.short_description = 'Применить скидку 10%%'
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom = [
+            path('update-discount/<int:product_id>/', self.admin_site.admin_view(self.update_discount), name='product_update_discount'),
+        ]
+        return custom + urls
+
+    def update_discount(self, request, product_id):
+        from django.http import JsonResponse
+        from django.shortcuts import get_object_or_404
+        product = get_object_or_404(Product, pk=product_id)
+        if request.method != 'POST':
+            return JsonResponse({'error': 'invalid_method'}, status=405)
+        try:
+            raw = request.POST.get('percent', '0')
+            percent = max(0, min(99, int(float(raw))))
+            old_price = float(product.old_price) if product.old_price else None
+            if percent > 0:
+                if old_price is None or old_price <= 0:
+                    old_price = float(product.price)
+                new_price = old_price * (100.0 - percent) / 100.0
+                product.old_price = old_price
+                product.price = max(0.0, new_price)
+            else:
+                if old_price is not None:
+                    product.price = old_price
+                product.old_price = None
+            product.save(update_fields=['price','old_price'])
+            data = {
+                'success': True,
+                'percent': percent,
+                'price': f"{float(product.price):.2f}",
+                'old_price': f"{float(product.old_price):.2f}" if product.old_price else None,
+            }
+            return JsonResponse(data)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    class Media:
+        js = ('catalog/admin_product.js',)
+        css = {'all': ('catalog/admin_product.css',)}
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Администрирование TechMarket{% endblock %}
+
+{% block branding %}
+  <h1 id="site-name">Панель администрирования TechMarket</h1>
+{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'catalog/admin_custom.css' %}">
+{% endblock %}
+
