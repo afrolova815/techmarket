@@ -4,7 +4,11 @@
 {% block content %}
 <div class="product-detail">
     <div class="product-gallery">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% else %}
         <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ product.name }}">
+        {% endif %}
     </div>
     
     <div class="product-details">
@@ -79,7 +83,11 @@
             <a href="{{ similar.get_absolute_url }}" class="card-link-overlay" aria-label="Открыть {{ similar.name }}"></a>
             {% if similar.has_discount %}<div class="discount-badge">Скидка</div>{% endif %}
             <div class="product-image">
+                {% if similar.image %}
+                <img src="{{ similar.image.url }}" alt="{{ similar.name }}">
+                {% else %}
                 <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ similar.name }}">
+                {% endif %}
             </div>
             <div class="product-info">
                 <h3>{{ similar.name }}</h3>

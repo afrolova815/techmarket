@@ -42,7 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
     list_editable = ['price', 'is_available', 'status']
     prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ['created', 'updated']
+    readonly_fields = ['created', 'updated', 'image_preview']
     filter_horizontal = ['tags']
     actions = ['mark_published', 'mark_unavailable', 'apply_discount_10']
     
@@ -52,6 +52,9 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Цены и наличие', {
             'fields': ('price', 'old_price', 'quantity', 'is_available')
+        }),
+        ('Изображение', {
+            'fields': ('image', 'image_preview')
         }),
         ('Статус', {
             'fields': ('status',)
@@ -146,6 +149,15 @@ class ProductAdmin(admin.ModelAdmin):
     class Media:
         js = ('catalog/admin_product.js',)
         css = {'all': ('catalog/admin_product.css',)}
+
+    def image_preview(self, obj):
+        try:
+            if obj.image:
+                return mark_safe(f'<img src="{obj.image.url}" alt="{obj.name}" style="max-width:200px; height:auto; border:1px solid #e2e8f0; border-radius:6px;" />')
+            return mark_safe('<span class="label">Нет изображения</span>')
+        except Exception:
+            return mark_safe('<span class="label">Нет изображения</span>')
+    image_preview.short_description = 'Предпросмотр'
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+import os
+import uuid
 
 
 class Tag(models.Model):
@@ -96,6 +98,10 @@ class Product(models.Model):
     objects = ProductManager()
     advanced = AdvancedProductManager()
     tags = models.ManyToManyField('Tag', related_name='products', blank=True, verbose_name="Теги")
+    def product_image_upload_to(instance, filename):
+        ext = os.path.splitext(filename)[1].lower()
+        return f'products/{uuid.uuid4().hex}{ext}'
+    image = models.ImageField(upload_to=product_image_upload_to, blank=True, null=True, verbose_name="Изображение")
 
     class ProductType(models.TextChoices):
         PHYSICAL = 'physical', 'Физический товар'

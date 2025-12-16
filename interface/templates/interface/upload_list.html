@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Загруженные файлы{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2 class="page-title">Загруженные файлы</h2>
+</div>
+
+{% if files %}
+  <div class="results-counter">
+    Найдено {{ files|length }} файл(ов)
+  </div>
+  <ul>
+    {% for f in files %}
+      <li>
+        <a class="product-link" href="{{ f.url }}" target="_blank" rel="noopener noreferrer">{{ f.name }}</a>
+        <span class="label">— {{ f.size_kb }} KB, изменён: {{ f.modified|date:"d.m.Y H:i" }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="alert alert-error" role="alert">Файлов ещё нет</div>
+{% endif %}
+{% endblock %}

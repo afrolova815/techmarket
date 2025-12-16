@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Загрузка файла{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2 class="page-title">Загрузка файла</h2>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form action="" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <p>
+    <label class="label" for="{{ form.file.id_for_label }}">Файл</label>
+    {{ form.file }}
+    {{ form.file.errors }}
+  </p>
+  <button class="product-link" type="submit">Загрузить</button>
+  {{ form.non_field_errors }}
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    document.querySelectorAll('.alert-success').forEach(function(el){ el.style.display='none'; });
+  }, 2000);
+});
+</script>
+{% endblock %}

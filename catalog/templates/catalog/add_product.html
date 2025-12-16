@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Добавление товара{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2 class="page-title">Добавление товара</h2>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form action="" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <p>
+    <label class="label" for="{{ form.name.id_for_label }}">Название</label>
+    {{ form.name }}
+    {{ form.name.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.slug.id_for_label }}">URL</label>
+    {{ form.slug }}
+    {{ form.slug.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.description.id_for_label }}">Описание</label>
+    {{ form.description }}
+    {{ form.description.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.price.id_for_label }}">Цена</label>
+    {{ form.price }}
+    {{ form.price.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.old_price.id_for_label }}">Старая цена</label>
+    {{ form.old_price }}
+    {{ form.old_price.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.quantity.id_for_label }}">Количество на складе</label>
+    {{ form.quantity }}
+    {{ form.quantity.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.category.id_for_label }}">Категория</label>
+    {{ form.category }}
+    {{ form.category.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.brand.id_for_label }}">Бренд</label>
+    {{ form.brand }}
+    {{ form.brand.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.tags.id_for_label }}">Теги</label>
+    {{ form.tags }}
+    {{ form.tags.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.product_type.id_for_label }}">Тип товара</label>
+    {{ form.product_type }}
+    {{ form.product_type.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.image.id_for_label }}">Изображение</label>
+    {{ form.image }}
+    {{ form.image.errors }}
+  </p>
+  <p>
+    <label class="label" for="{{ form.is_available.id_for_label }}">Доступен</label>
+    {{ form.is_available }}
+    {{ form.is_available.errors }}
+  </p>
+
+  <button class="product-link" type="submit">Добавить</button>
+  {{ form.non_field_errors }}
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    document.querySelectorAll('.alert-success').forEach(function(el){ el.style.display='none'; });
+  }, 2000);
+});
+</script>
+{% endblock %}

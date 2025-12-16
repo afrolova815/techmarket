@@ -102,3 +102,119 @@ class OrderTests(TestCase):
         self.assertEqual(int(total['total']), 200000)
 
 # Create your tests here.
+from django.test import TestCase
+from django.utils.text import slugify
+from .forms import ProductForm
+from .models import Category, Brand, Product
+
+
+class ProductFormTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(name="Смартфоны", slug="smartfony")
+        self.brand = Brand.objects.create(name="Apple", slug="apple")
+
+    def test_invalid_slug_rejected(self):
+        form = ProductForm({
+            "name": "Тестовый товар",
+            "slug": "невалидный-слаг",
+            "description": "",
+            "price": "1999.99",
+            "old_price": "",
+            "quantity": "5",
+            "is_available": "on",
+            "category": str(self.category.id),
+            "brand": str(self.brand.id),
+            "product_type": Product.ProductType.PHYSICAL,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("slug", form.errors)
+
+    def test_nonunique_slug_error(self):
+        Product.objects.create(
+            name="Уже есть",
+            slug="exists",
+            description="",
+            price=1000,
+            quantity=1,
+            category=self.category,
+            brand=self.brand,
+        )
+        form = ProductForm({
+            "name": "Новый",
+            "slug": "exists",
+            "description": "",
+            "price": "1999.99",
+            "old_price": "",
+            "quantity": "5",
+            "is_available": "on",
+            "category": str(self.category.id),
+            "brand": str(self.brand.id),
+            "product_type": Product.ProductType.PHYSICAL,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("slug", form.errors)
+
+    def test_valid_form_saves(self):
+        form = ProductForm({
+            "name": "Тестовый товар",
+            "slug": "valid-slug",
+            "description": "Описание",
+            "price": "1999.99",
+            "old_price": "",
+            "quantity": "5",
+            "is_available": "on",
+            "category": str(self.category.id),
+            "brand": str(self.brand.id),
+            "product_type": Product.ProductType.PHYSICAL,
+        })
+        self.assertTrue(form.is_valid())
+        obj = form.save()
+        self.assertIsInstance(obj, Product)
+
+    def test_invalid_name_symbols(self):
+        form = ProductForm({
+            "name": "Bad@Title!",
+            "slug": "valid-slug-2",
+            "description": "",
+            "price": "100",
+            "old_price": "",
+            "quantity": "10",
+            "is_available": "on",
+            "category": str(self.category.id),
+            "brand": str(self.brand.id),
+            "product_type": Product.ProductType.PHYSICAL,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("name", form.errors)
+
+    def test_zero_price_invalid(self):
+        form = ProductForm({
+            "name": "Корректное название",
+            "slug": "valid-slug-3",
+            "description": "",
+            "price": "0",
+            "old_price": "",
+            "quantity": "10",
+            "is_available": "on",
+            "category": str(self.category.id),
+            "brand": str(self.brand.id),
+            "product_type": Product.ProductType.PHYSICAL,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("price", form.errors)
+
+    def test_zero_quantity_invalid(self):
+        form = ProductForm({
+            "name": "Корректное название",
+            "slug": "valid-slug-4",
+            "description": "",
+            "price": "100",
+            "old_price": "",
+            "quantity": "0",
+            "is_available": "on",
+            "category": str(self.category.id),
+            "brand": str(self.brand.id),
+            "product_type": Product.ProductType.PHYSICAL,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("quantity", form.errors)

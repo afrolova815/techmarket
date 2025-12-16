@@ -4,6 +4,8 @@ from django.db.models import Q, Avg, Count, Sum, F, Value, FloatField, Case, Whe
 from django.core.paginator import Paginator, EmptyPage
 from django.utils.text import slugify
 from .models import Product, Category, Brand, Tag
+from .forms import ProductForm
+from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -412,3 +414,15 @@ def product_detail_api(request, product_id):
         product.delete()
         return JsonResponse({'status': 'deleted'})
     return JsonResponse({'error': 'method_not_allowed'}, status=405)
+def add_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Товар успешно добавлен')
+            return redirect('product_list')
+        else:
+            messages.error(request, 'Ошибка: проверьте корректность введённых данных')
+    else:
+        form = ProductForm()
+    return render(request, 'catalog/add_product.html', {'form': form, 'title': 'Добавление товара'})

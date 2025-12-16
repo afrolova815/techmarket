@@ -73,7 +73,11 @@
         <div class="discount-badge">Скидка</div>
         {% endif %}
         <div class="product-image">
+          {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
           <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ product.name }}">
+          {% endif %}
         </div>
         <div class="product-info">
           <h3>{{ product.name }}</h3>

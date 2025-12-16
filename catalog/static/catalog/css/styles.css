@@ -301,3 +301,21 @@ footer p {
   .catalog-layout { grid-template-columns: 1fr; }
   .filters-sidebar { position: relative; top: 0; }
 }
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    margin: 12px 0;
+    font-size: 0.95rem;
+}
+.alert-success {
+    background: #c6f6d5;
+    border-color: #9ae6b4;
+    color: #2f855a;
+}
+.alert-error {
+    background: #fed7d7;
+    border-color: #feb2b2;
+    color: #c53030;
+}

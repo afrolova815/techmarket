@@ -6,6 +6,7 @@ register_converter(converters.StatusConverter, 'order_status')
 
 urlpatterns = [
     path('', views.display_products, name='product_list'),
+    path('add/', views.add_product, name='add_product'),
     path('product/<slug:product_slug>/', views.product_detail, name='product_detail'),
     path('categories/', views.category_overview, name='category_list'),
     path('price/<price_range:price>/', views.price_filtered_products, name='price_filter'),
