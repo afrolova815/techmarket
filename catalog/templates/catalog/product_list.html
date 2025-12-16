@@ -107,19 +107,7 @@
       {% endfor %}
     </div>
 
-    <div class="pagination">
-      {% if page_obj %}
-      <div class="group">
-        {% if page_obj.has_previous %}
-        <a class="chip" href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">← Предыдущая</a>
-        {% endif %}
-        <span class="label">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-        {% if page_obj.has_next %}
-        <a class="chip" href="?{{ querystring }}&page={{ page_obj.next_page_number }}">Следующая →</a>
-        {% endif %}
-      </div>
-      {% endif %}
-    </div>
+    {% include "partials/pagination.html" %}
 
     <div class="results-counter">
       <span class="label">Найдено:</span>

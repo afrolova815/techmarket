@@ -17,7 +17,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write("Начало заполнения базы данных...")
 
-        # Создание категорий
         categories_data = [
             {"name": "Смартфоны", "slug": "smartphones", "description": "Мобильные телефоны и смартфоны"},
             {"name": "Ноутбуки", "slug": "laptops", "description": "Портативные компьютеры"},
@@ -38,7 +37,6 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f"Создана категория: {name}")
 
-        # Создание брендов
         brands_data = [
             {"name": "Apple", "description": "Американская корпорация"},
             {"name": "Samsung", "description": "Южнокорейская компания"},
@@ -79,7 +77,6 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(f"Создан бренд: {name}")
 
-        # Создание товаров
         products_data = [
             {"name": "iPhone 15 Pro 128GB", "description": "Флагманский смартфон Apple с процессором A17 Pro", "price": 99990, "old_price": 109990, "quantity": 45, "category_slug": "smartphones", "brand_slug": "apple"},
             {"name": "iPhone 15 Pro 256GB", "description": "Флагманский смартфон Apple с процессором A17 Pro", "price": 109990, "old_price": 119990, "quantity": 35, "category_slug": "smartphones", "brand_slug": "apple"},
@@ -178,13 +175,11 @@ class Command(BaseCommand):
                     )
                 )
 
-        # Теги
         tags_data = ["Хит", "Новинка", "Распродажа", "Игровой", "Премиум"]
         for t in tags_data:
             slug = slugify(t)
             Tag.objects.get_or_create(slug=slug, defaults={"name": t})
 
-        # Присвоение тегов и характеристик
         for product in Product.objects.all():
             ProductDetail.objects.get_or_create(
                 product=product,
@@ -196,7 +191,6 @@ class Command(BaseCommand):
             )
             for tag in Tag.objects.order_by('?')[:2]:
                 product.tags.add(tag)
-        # Гарантированно назначаем тег "Хит" всем товарам для демонстрации
         try:
             hit_tag = Tag.objects.get(slug=slugify("Хит"))
             for product in Product.objects.all():
@@ -204,7 +198,6 @@ class Command(BaseCommand):
         except Tag.DoesNotExist:
             pass
 
-        # Пример заказов
         order1 = Order.objects.get_or_create(
             code="ORD-0001", defaults={"status": Order.Status.NEW}
         )[0]

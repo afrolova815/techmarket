@@ -5,7 +5,7 @@
 <div class="product-detail">
     <div class="product-gallery">
         {% if product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
         {% else %}
         <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ product.name }}">
         {% endif %}
@@ -84,7 +84,7 @@
             {% if similar.has_discount %}<div class="discount-badge">Скидка</div>{% endif %}
             <div class="product-image">
                 {% if similar.image %}
-                <img src="{{ similar.image.url }}" alt="{{ similar.name }}">
+                <img src="{{ similar.image.url }}" alt="{{ similar.name }}" loading="lazy" decoding="async">
                 {% else %}
                 <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ similar.name }}">
                 {% endif %}

@@ -37,5 +37,3 @@ class AddRecordFormValidatorTests(TestCase):
         })
         self.assertFalse(form.is_valid())
         self.assertIn("title", form.errors)
-
-# Create your tests here.

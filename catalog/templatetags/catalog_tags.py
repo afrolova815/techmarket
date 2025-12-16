@@ -1,4 +1,3 @@
-# catalog/templatetags/catalog_tags.py
 from django import template
 from catalog.models import Category, Tag
 

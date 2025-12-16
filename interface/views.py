@@ -6,6 +6,7 @@ from django.conf import settings
 import os
 import uuid
 import datetime
+from django.views.generic import TemplateView, FormView, ListView
 
 
 def resource_not_found(request, exception):
@@ -15,23 +16,20 @@ def resource_not_found(request, exception):
         "<p>Рекомендуем посетить <a href=\"/catalog/\">каталог товаров</a>.</p>"
     )
 
-def main_dashboard(request):
-    return render(request, "interface/index.html")
+class MainDashboardView(TemplateView):
+    template_name = "interface/index.html"
 
-# def main_dashboard(request):
-#     return redirect("product_list")
+class AddRecordView(FormView):
+    template_name = "interface/add_record.html"
+    form_class = AddRecordForm
 
-def add_record(request):
-    if request.method == "POST":
-        form = AddRecordForm(request.POST)
-        if form.is_valid():
-            messages.success(request, "Данные успешно отправлены")
-            return redirect("add_record")
-        else:
-            messages.error(request, "Произошла ошибка. Проверьте правильность заполнения формы.")
-    else:
-        form = AddRecordForm()
-    return render(request, "interface/add_record.html", {"form": form})
+    def form_valid(self, form):
+        messages.success(self.request, "Данные успешно отправлены")
+        return redirect("add_record")
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Произошла ошибка. Проверьте правильность заполнения формы.")
+        return render(self.request, self.template_name, {"form": form})
 
 def _handle_uploaded_file(fobj):
     base_dir = os.path.join(settings.MEDIA_ROOT, "uploads")
@@ -44,32 +42,36 @@ def _handle_uploaded_file(fobj):
             dest.write(chunk)
     return unique_name
 
-def upload_file(request):
-    if request.method == "POST":
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            f = form.cleaned_data["file"]
-            saved_name = _handle_uploaded_file(f)
-            messages.success(request, f"Файл загружен: {saved_name}")
-            return redirect("upload_file")
-        else:
-            messages.error(request, "Ошибка: проверьте корректность файла")
-    else:
-        form = UploadFileForm()
-    return render(request, "interface/upload.html", {"form": form, "title": "Загрузка файла"})
+class UploadFileView(FormView):
+    template_name = "interface/upload.html"
+    form_class = UploadFileForm
 
-def uploaded_files_list(request):
-    base_dir = os.path.join(settings.MEDIA_ROOT, "uploads")
-    files = []
-    if os.path.isdir(base_dir):
-        for entry in os.scandir(base_dir):
-            if entry.is_file():
-                stat = entry.stat()
-                files.append({
-                    "name": entry.name,
-                    "url": f"{settings.MEDIA_URL}uploads/{entry.name}",
-                    "size_kb": round(stat.st_size / 1024, 2),
-                    "modified": datetime.datetime.fromtimestamp(stat.st_mtime),
-                })
-    files.sort(key=lambda x: x["modified"], reverse=True)
-    return render(request, "interface/upload_list.html", {"files": files, "title": "Загруженные файлы"})
+    def form_valid(self, form):
+        f = form.cleaned_data["file"]
+        saved_name = _handle_uploaded_file(f)
+        messages.success(self.request, f"Файл загружен: {saved_name}")
+        return redirect("upload_file")
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Ошибка: проверьте корректность файла")
+        return render(self.request, self.template_name, {"form": form, "title": "Загрузка файла"})
+
+class UploadedFilesListView(ListView):
+    template_name = "interface/upload_list.html"
+    context_object_name = "files"
+
+    def get_queryset(self):
+        base_dir = os.path.join(settings.MEDIA_ROOT, "uploads")
+        files = []
+        if os.path.isdir(base_dir):
+            for entry in os.scandir(base_dir):
+                if entry.is_file():
+                    stat = entry.stat()
+                    files.append({
+                        "name": entry.name,
+                        "url": f"{settings.MEDIA_URL}uploads/{entry.name}",
+                        "size_kb": round(stat.st_size / 1024, 2),
+                        "modified": datetime.datetime.fromtimestamp(stat.st_mtime),
+                    })
+        files.sort(key=lambda x: x["modified"], reverse=True)
+        return files

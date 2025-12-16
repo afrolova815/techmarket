@@ -52,7 +52,6 @@ class CatalogViewTests(TestCase):
     def test_product_details_presence(self):
         resp = self.client.get(reverse('product_detail', args=['iphone']))
         self.assertEqual(resp.status_code, 200)
-        # Проверка, что детали доступны через related_name
         self.assertTrue(hasattr(self.p1, 'details'))
 
 
@@ -101,7 +100,6 @@ class OrderTests(TestCase):
         total = self.order.items.aggregate(total=Sum(F('quantity') * F('price')))
         self.assertEqual(int(total['total']), 200000)
 
-# Create your tests here.
 from django.test import TestCase
 from django.utils.text import slugify
 from .forms import ProductForm
