@@ -210,6 +210,7 @@ function App() {
   const [products, setProducts] = useState(initialProducts);
   const [sortBy, setSortBy] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+  const [success, setSuccess] = useState('');
 
   const sortedProducts = useMemo(() => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -234,12 +235,15 @@ function App() {
 
   const handleAdd = (p) => {
     setProducts((prev) => [p, ...prev]);
+    setSuccess('Запись успешно добавлена');
+    setTimeout(() => setSuccess(''), 2500);
   };
 
   return (
     <div className="layout">
       <div>
         <h2>Каталог товаров</h2>
+        {success && <div className="alert alert-success" role="status">{success}</div>}
         <SortControls
           sortBy={sortBy}
           setSortBy={setSortBy}
@@ -261,4 +265,3 @@ function App() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
-

@@ -22,6 +22,18 @@ html, body {
   padding: 2rem;
 }
 
+.alert {
+  margin: 0.5rem 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+.alert-success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -140,4 +152,3 @@ html, body {
   font-size: 0.9rem;
   font-weight: 500;
 }
-
