@@ -12,3 +12,14 @@
   <link rel="stylesheet" href="{% static 'catalog/admin_custom.css' %}">
 {% endblock %}
 
+{% block extrahead %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      try {
+        localStorage.setItem('django.admin.theme', 'light');
+      } catch (e) {}
+      document.documentElement.setAttribute('data-theme', 'light');
+    });
+  </script>
+{% endblock %}
