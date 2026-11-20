@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2 class="page-title">Профиль</h2>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if user.photo %}
+        <p><img src="{{ user.photo.url }}" alt="{{ user.username }}" style="max-width: 150px; border-radius: 8px;"></p>
+    {% else %}
+        <p><img src="{{ default_image }}" alt="Аватар по умолчанию" style="max-width: 150px; border-radius: 8px;"></p>
+    {% endif %}
+
+    <div class="form-error">{{ form.non_field_errors }}</div>
+    {% for f in form %}
+        <p>
+            <label class="label" for="{{ f.id_for_label }}">{{ f.label }}: </label>
+            {{ f }}
+        </p>
+        <div class="form-error">{{ f.errors }}</div>
+    {% endfor %}
+    <p><button class="product-link" type="submit">Сохранить</button></p>
+</form>
+
+<hr>
+<p><a href="{% url 'users:password_change' %}">Сменить пароль</a></p>
+{% endblock %}

@@ -2,6 +2,13 @@ from django.utils.text import slugify
 from django.http import QueryDict
 from .models import Category, Tag
 
+menu = [
+    {'title': "Главная", 'url_name': 'main_dashboard'},
+    {'title': "Каталог", 'url_name': 'product_list'},
+    {'title': "Категории", 'url_name': 'category_list'},
+]
+
+
 class DataMixin:
     title = ''
     paginate_by = 10
