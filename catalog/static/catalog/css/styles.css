@@ -13,36 +13,102 @@ body {
     padding: 0 20px;
 }
 
-header {
+header, .site-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 1rem 0;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-header h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 300;
-    text-align: center;
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-nav {
-    text-align: center;
-    margin-top: 1rem;
-}
-
-nav a {
+.brand-logo {
     color: white;
     text-decoration: none;
-    margin: 0 15px;
+    font-size: 1.9rem;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.auth-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.auth-link, .auth-user {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.auth-link:hover, .auth-user:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.auth-btn {
+    display: inline-block;
+    background: white;
+    color: #5a67d8;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid white;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.auth-btn:hover {
+    background: #edf2f7;
+    color: #4c51bf;
+}
+
+.auth-btn--outline {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.auth-btn--outline:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+nav, .main-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 12px;
+    margin-top: 0.75rem;
+}
+
+nav a, .main-nav a {
+    color: white;
+    text-decoration: none;
     padding: 5px 10px;
     border-radius: 4px;
     transition: background-color 0.3s ease;
 }
 
-nav a:hover {
+nav a:hover, .main-nav a:hover {
     background-color: rgba(255, 255, 255, 0.2);
+}
+
+.main-nav a.nav-accent {
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 main {
@@ -155,9 +221,18 @@ footer p {
         grid-template-columns: 1fr;
     }
 
-    nav a {
+    .header-top {
+        flex-wrap: wrap;
+    }
+
+    nav, .main-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    nav a, .main-nav a {
         display: block;
-        margin: 5px 0;
+        text-align: center;
     }
 }
 
@@ -375,4 +450,58 @@ footer p {
     background: #fed7d7;
     border-color: #feb2b2;
     color: #c53030;
+}
+
+.form-error, .errorlist {
+    color: #c53030;
+    font-size: 0.875rem;
+    margin: 2px 0 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 14px 0;
+}
+
+.btn-danger {
+    display: inline-block;
+    background-color: #e53e3e;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: #c53030;
+}
+
+.profile-avatar {
+    max-width: 150px;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+}
+
+.product-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.product-actions .add-to-cart,
+.product-actions .product-link,
+.product-actions .btn-danger {
+    margin-top: 0;
 }

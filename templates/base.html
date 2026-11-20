@@ -6,21 +6,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}TechMarket - Магазин цифровой техники{% endblock %}</title>
-    <link type="text/css" href="{% static "catalog/css/styles.css" %}?v=4" rel="stylesheet" />
+    <title>{% block title %}TechMarket — Магазин цифровой техники{% endblock %}</title>
+    <link type="text/css" href="{% static 'catalog/css/styles.css' %}?v=6" rel="stylesheet" />
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <div class="container">
-            <h1>TechMarket</h1>
-            <nav>
-                <a href="{% url "main_dashboard" %}">Главная</a>
-                <a href="{% url "product_list" %}">Каталог</a>
+            <div class="header-top">
+                <a class="brand-logo" href="{% url 'main_dashboard' %}">TechMarket</a>
+
+                <div class="auth-panel">
+                    {% if user.is_authenticated %}
+                        <a class="auth-user" href="{% url 'users:profile' %}">{{ user.username }}</a>
+                        <a class="auth-btn auth-btn--outline" href="{% url 'users:logout' %}">Выйти</a>
+                    {% else %}
+                        <a class="auth-link" href="{% url 'users:login' %}">Войти</a>
+                        <a class="auth-btn" href="{% url 'users:register' %}">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <nav class="main-nav" aria-label="Основная навигация">
+                {% if mainmenu %}
+                    {% for m in mainmenu %}
+                        <a href="{% url m.url_name %}">{{ m.title }}</a>
+                    {% endfor %}
+                {% else %}
+                    <a href="{% url 'main_dashboard' %}">Главная</a>
+                    <a href="{% url 'product_list' %}">Каталог</a>
+                {% endif %}
 
                 {% get_categories as categories %}
                 {% for category in categories %}
-                    <a href="{% url "category_detail" category.slug %}">{{ category.name }}</a>
+                    <a href="{% url 'category_detail' category.slug %}">{{ category.name }}</a>
                 {% endfor %}
+
+                {% if perms.catalog.add_product %}
+                    <a class="nav-accent" href="{% url 'add_product' %}">+ Добавить товар</a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    <a class="nav-accent" href="{% url 'add_record' %}">Добавить запись</a>
+                    <a class="nav-accent" href="{% url 'upload_file' %}">Загрузить файл</a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -32,7 +60,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 TechMarket. Все права защищены.</p>
+            <p>&copy; 2025–2026 TechMarket. Все права защищены.</p>
         </div>
     </footer>
 </body>

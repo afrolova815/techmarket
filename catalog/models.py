@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
+from django.contrib.auth import get_user_model
 import os
 import uuid
 
@@ -98,9 +99,19 @@ class Product(models.Model):
     objects = ProductManager()
     advanced = AdvancedProductManager()
     tags = models.ManyToManyField('Tag', related_name='products', blank=True, verbose_name="Теги")
+    author = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        related_name='products',
+        null=True,
+        default=None,
+        verbose_name="Автор"
+    )
+
     def product_image_upload_to(instance, filename):
         ext = os.path.splitext(filename)[1].lower()
         return f'products/{uuid.uuid4().hex}{ext}'
+
     image = models.ImageField(upload_to=product_image_upload_to, blank=True, null=True, verbose_name="Изображение")
 
     class ProductType(models.TextChoices):

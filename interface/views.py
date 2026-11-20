@@ -1,6 +1,8 @@
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import AddRecordForm, UploadFileForm
 from django.conf import settings
 import os
@@ -16,10 +18,12 @@ def resource_not_found(request, exception):
         "<p>Рекомендуем посетить <a href=\"/catalog/\">каталог товаров</a>.</p>"
     )
 
+
 class MainDashboardView(TemplateView):
     template_name = "interface/index.html"
 
-class AddRecordView(FormView):
+
+class AddRecordView(LoginRequiredMixin, FormView):
     template_name = "interface/add_record.html"
     form_class = AddRecordForm
 
@@ -30,6 +34,7 @@ class AddRecordView(FormView):
     def form_invalid(self, form):
         messages.error(self.request, "Произошла ошибка. Проверьте правильность заполнения формы.")
         return render(self.request, self.template_name, {"form": form})
+
 
 def _handle_uploaded_file(fobj):
     base_dir = os.path.join(settings.MEDIA_ROOT, "uploads")
@@ -42,7 +47,8 @@ def _handle_uploaded_file(fobj):
             dest.write(chunk)
     return unique_name
 
-class UploadFileView(FormView):
+
+class UploadFileView(LoginRequiredMixin, FormView):
     template_name = "interface/upload.html"
     form_class = UploadFileForm
 
@@ -56,7 +62,8 @@ class UploadFileView(FormView):
         messages.error(self.request, "Ошибка: проверьте корректность файла")
         return render(self.request, self.template_name, {"form": form, "title": "Загрузка файла"})
 
-class UploadedFilesListView(ListView):
+
+class UploadedFilesListView(LoginRequiredMixin, ListView):
     template_name = "interface/upload_list.html"
     context_object_name = "files"
 
