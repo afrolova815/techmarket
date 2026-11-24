@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'catalog.apps.CatalogConfig',
     'interface.apps.InterfaceConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -64,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'users.context_processors.get_catalog_context',
             ],
         },
     },
@@ -127,3 +129,34 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Модель пользователя (ЛР12)
+AUTH_USER_MODEL = 'users.User'
+DEFAULT_USER_IMAGE = MEDIA_URL + 'users/default.png'
+
+# Перенаправления при входе и выходе (ЛР12)
+LOGIN_REDIRECT_URL = 'main_dashboard'
+LOGOUT_REDIRECT_URL = 'main_dashboard'
+LOGIN_URL = 'users:login'
+
+# Бэкенды аутентификации: по логину и по E-mail (ЛР12)
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'users.authentication.EmailAuthBackend',
+]
+
+# Настройка почтового сервера для восстановления пароля (ЛР12)
+EMAIL_BACKEND = os.environ.get(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = "smtp.yandex.ru"
+EMAIL_PORT = 465
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "django@yandex.ru") #Заглушка
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "xxxxxxxxxxxxxxxxxxxxxxxx") #Заглушка
+
+EMAIL_USE_SSL = True
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
+EMAIL_ADMIN = EMAIL_HOST_USER

@@ -10,14 +10,15 @@
         <img src="{% static "catalog/images/no-image.svg" %}" alt="{{ product.name }}">
         {% endif %}
     </div>
-    
+
     <div class="product-details">
         <h1>{{ product.name }}</h1>
         <p class="brand-category">
-            Бренд: {{ product.brand.name }} | 
-            Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a>
+            Бренд: {{ product.brand.name }} |
+            Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a> |
+            Автор: {{ product.author.username|default:"неизвестен" }}
         </p>
-        
+
         <div class="price-section">
             {% if product.has_discount %}
             <div class="old-price">{{ product.old_price }} руб.</div>
@@ -29,7 +30,7 @@
             <div class="current-price">{{ product.price }} руб.</div>
             {% endif %}
         </div>
-        
+
         <div class="stock-status">
             {% if product.quantity > 0 and product.is_available %}
             <span class="in-stock">✓ В наличии</span>
@@ -38,7 +39,7 @@
             <span class="out-of-stock">✗ Нет в наличии</span>
             {% endif %}
         </div>
-        
+
         <div class="product-description">
             <h3>Описание</h3>
             <p>{{ product.description|linebreaks }}</p>
@@ -63,12 +64,19 @@
             {% endfor %}
         </div>
         {% endif %}
-        
+
         <div class="product-actions">
             {% if product.quantity > 0 and product.is_available %}
             <button class="add-to-cart">Добавить в корзину</button>
             {% else %}
             <button class="notify-btn">Уведомить о поступлении</button>
+            {% endif %}
+
+            {% if perms.catalog.change_product %}
+            <a class="product-link" href="{% url 'product_update' product.pk %}">Редактировать</a>
+            {% endif %}
+            {% if perms.catalog.delete_product %}
+            <a class="product-link" href="{% url 'product_delete' product.pk %}">Удалить</a>
             {% endif %}
         </div>
     </div>

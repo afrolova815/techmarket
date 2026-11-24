@@ -3,6 +3,8 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.db.models import Q, Avg, Count, Sum, F, Value, FloatField, Case, When, CharField
 from django.core.paginator import Paginator, EmptyPage
 from django.utils.text import slugify
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .models import Product, Category, Brand, Tag
 from .forms import ProductForm
 from django.contrib import messages
@@ -11,6 +13,7 @@ from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView, DeleteView
 from .mixins import DataMixin
 import json
+
 
 class ProductListView(DataMixin, ListView):
     model = Product
@@ -149,6 +152,7 @@ class ProductListView(DataMixin, ListView):
         context.update(extras)
         return context
 
+
 class OrderListView(View):
     def get(self, request):
         status_filter = request.GET.get('status', '')
@@ -161,6 +165,7 @@ class OrderListView(View):
                 filter_info.append(f"дата: {date_filter}")
             return HttpResponse(f"Список заказов с фильтрами: {', '.join(filter_info)}")
         return HttpResponse("Все заказы системы")
+
 
 class CategoryOverviewView(DataMixin, TemplateView):
     template_name = 'catalog/category_overview.html'
@@ -182,17 +187,21 @@ class CategoryDetailView(DataMixin, DetailView):
         context.update(extras)
         return context
 
+
 class OrderDetailView(View):
     def get(self, request, order_code):
         return HttpResponse(f"Детали заказа: {order_code}")
+
 
 class PriceFilteredProductsView(View):
     def get(self, request, price):
         return HttpResponse(f"Товары в ценовом диапазоне: {price['min']} - {price['max']}")
 
+
 class BrandProductsView(View):
     def get(self, request, brand_identifier):
         return HttpResponse(f"Продукция бренда: {brand_identifier}")
+
 
 class StatusOrdersView(View):
     def get(self, request, status):
@@ -228,9 +237,11 @@ class ProductDetailView(DataMixin, DetailView):
         context.update(extras)
         return context
 
+
 class LegacyRedirectView(View):
     def get(self, request, old_id):
         return redirect('product_list', permanent=True)
+
 
 class OrmExamplesView(View):
     def get(self, request):
@@ -278,6 +289,7 @@ class OrmExamplesView(View):
             'annotated': list(annotated),
         }
         return JsonResponse(context)
+
 
 @csrf_exempt
 def product_list_api(request):
@@ -328,7 +340,7 @@ def product_list_api(request):
         return JsonResponse(data, status=201)
 
     products = Product.objects.published().values(
-        'id', 'name', 'slug', 'price', 'old_price', 
+        'id', 'name', 'slug', 'price', 'old_price',
         'brand__name', 'category__name', 'is_available'
     )
     page = request.GET.get('page', 1)
@@ -348,6 +360,7 @@ def product_list_api(request):
         'pages': paginator.num_pages,
         'count': paginator.count
     })
+
 
 @csrf_exempt
 def product_detail_api(request, product_id):
@@ -395,12 +408,17 @@ def product_detail_api(request, product_id):
         product.delete()
         return JsonResponse({'status': 'deleted'})
     return JsonResponse({'error': 'method_not_allowed'}, status=405)
-class ProductCreateView(DataMixin, CreateView):
+
+
+class ProductCreateView(LoginRequiredMixin, PermissionRequiredMixin, DataMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'catalog/add_product.html'
+    permission_required = 'catalog.add_product'
 
     def form_valid(self, form):
+        w = form.save(commit=False)
+        w.author = self.request.user
         response = super().form_valid(form)
         messages.success(self.request, 'Товар успешно добавлен')
         return redirect('product_list')
@@ -409,10 +427,12 @@ class ProductCreateView(DataMixin, CreateView):
         messages.error(self.request, 'Ошибка: проверьте корректность введённых данных')
         return render(self.request, self.template_name, self.get_user_context(form=form, title='Добавление товара'))
 
-class ProductUpdateView(DataMixin, UpdateView):
+
+class ProductUpdateView(LoginRequiredMixin, PermissionRequiredMixin, DataMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = 'catalog/add_product.html'
+    permission_required = 'catalog.change_product'
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -423,9 +443,11 @@ class ProductUpdateView(DataMixin, UpdateView):
         messages.error(self.request, 'Ошибка обновления товара')
         return render(self.request, self.template_name, self.get_user_context(form=form, title=f'Редактирование: {getattr(self.object, "name", "")}'))
 
-class ProductDeleteView(DataMixin, DeleteView):
+
+class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DataMixin, DeleteView):
     model = Product
     template_name = 'catalog/product_confirm_delete.html'
+    permission_required = 'catalog.delete_product'
 
     def get_success_url(self):
         messages.success(self.request, 'Товар удалён')
