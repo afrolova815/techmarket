@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib import messages
 from django.utils.safestring import mark_safe
 from django.db.models import F
-from .models import Category, Brand, Product, Tag, ProductDetail, Order, OrderItem
+from .models import Category, Brand, Product, Tag, ProductDetail, Order, OrderItem, ProductReview
 
 class HasDiscountFilter(admin.SimpleListFilter):
     title = 'Со скидкой'
@@ -321,3 +321,10 @@ class OrderAdmin(admin.ModelAdmin):
     class Media:
         js = ('catalog/admin_order.js',)
         css = {'all': ('catalog/admin_order.css',)}
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ['product', 'author', 'rating', 'created', 'updated']
+    list_filter = ['rating', 'created']
+    search_fields = ['product__name', 'author__username', 'comment']
+    readonly_fields = ['created', 'updated']

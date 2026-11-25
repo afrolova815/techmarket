@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.ProductListView.as_view(), name='product_list'),
     path('add/', views.ProductCreateView.as_view(), name='add_product'),
     path('product/<slug:product_slug>/', views.ProductDetailView.as_view(), name='product_detail'),
+    path('product/<slug:product_slug>/review/', views.ProductReviewView.as_view(), name='product_review'),
     path('product/<int:pk>/edit/', views.ProductUpdateView.as_view(), name='product_update'),
     path('product/<int:pk>/delete/', views.ProductDeleteView.as_view(), name='product_delete'),
     path('categories/', views.CategoryOverviewView.as_view(), name='category_list'),
@@ -21,4 +22,5 @@ urlpatterns = [
     path('orm-examples/', views.OrmExamplesView.as_view(), name='orm_examples'),
     path('api/products/', views.product_list_api, name='product_list_api'),
     path('api/products/<int:product_id>/', views.product_detail_api, name='product_detail_api'),
+    path('review/<int:pk>/edit/', views.ReviewUpdateView.as_view(), name='review_update'),
 ]

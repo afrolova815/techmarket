@@ -2,6 +2,11 @@
 {% load static %}
 
 {% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 <div class="product-detail">
     <div class="product-gallery">
         {% if product.image %}
@@ -81,7 +86,96 @@
         </div>
     </div>
 </div>
+<section class="reviews-section" id="reviews">
+    <div class="reviews-header">
+        <h2>Оценки и отзывы покупателей</h2>
+        {% if reviews_count %}
+        <div class="rating-summary">
+            <span class="rating-score">★ {{ avg_rating|floatformat:1 }} / 5</span>
+            <span class="label">({{ reviews_count }} оценок)</span>
+        </div>
+        {% else %}
+        <span class="label">Оценок пока нет</span>
+        {% endif %}
+    </div>
 
+    {% if user.is_authenticated %}
+    <form class="review-form" method="post" action="{% url 'product_review' product.slug %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="label" for="id_review_comment">Комментарий к оценке (необязательно)</label>
+            <textarea
+                    id="id_review_comment"
+                    name="comment"
+                    rows="3"
+                    maxlength="1000"
+                    class="select select--full"
+                    placeholder="Напишите комментарий и нажмите на звезду — оценка сохранится в одно нажатие..."
+            >{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+        </div>
+
+        <div class="one-click-rating">
+            <span class="label">
+                {% if user_review %}
+                    Ваша текущая оценка: {{ user_review.rating }} из 5 (нажмите на звезду, чтобы изменить):
+                {% else %}
+                    Оцените товар в одно нажатие:
+                {% endif %}
+            </span>
+            <div class="star-rating" role="group" aria-label="Оценка товара от 1 до 5">
+                {% for star in rating_range %}
+                <button
+                        type="submit"
+                        name="rating"
+                        value="{{ star }}"
+                        class="star-btn {% if user_review and user_review.rating >= star %}is-active{% endif %}"
+                        title="Поставить {{ star }} из 5"
+                        aria-label="Поставить {{ star }} из 5"
+                >★</button>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    {% else %}
+    <p class="label">
+        Чтобы оценить товар и оставить комментарий,
+        <a class="link-btn" href="{% url 'users:login' %}?next={{ request.path }}">войдите в систему</a>.
+    </p>
+    {% endif %}
+
+    <div class="reviews-list">
+        {% for review in reviews %}
+        <article class="review-card">
+            <div class="review-card__top">
+                <div>
+                    <strong>{{ review.author.username }}</strong>
+                    <span class="review-stars" aria-label="Оценка {{ review.rating }} из 5">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <div class="review-meta">
+                    <span class="label">{{ review.created|date:"d.m.Y H:i" }}</span>
+                    {% if review.updated != review.created %}
+                    <span class="label">(изм.)</span>
+                    {% endif %}
+                    {% if user.is_authenticated and review.author_id == user.id %}
+                    <a class="link-btn" href="{% url 'review_update' review.pk %}">Редактировать</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% if review.comment %}
+            <p class="review-comment">{{ review.comment|linebreaksbr }}</p>
+            {% else %}
+            <p class="label">Без текстового комментария</p>
+            {% endif %}
+        </article>
+        {% empty %}
+        <p class="label">Станьте первым, кто оценит этот товар.</p>
+        {% endfor %}
+    </div>
+</section>
 {% if similar_products %}
 <div class="similar-products">
     <h2>Похожие товары</h2>
