@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 import os
 import uuid
 
@@ -194,3 +195,40 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.order.code}: {self.product.name} x{self.quantity}"
 
+class ProductReview(models.Model):
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Товар',
+    )
+    author = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name='product_reviews',
+        verbose_name='Покупатель',
+    )
+    rating = models.PositiveSmallIntegerField(
+        choices=RATING_CHOICES,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        verbose_name='Оценка',
+    )
+    comment = models.TextField(blank=True, verbose_name='Комментарий')
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Создан')
+    updated = models.DateTimeField(auto_now=True, verbose_name='Обновлён')
+
+    class Meta:
+        verbose_name = 'Отзыв о товаре'
+        verbose_name_plural = 'Отзывы о товарах'
+        ordering = ['-created']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'author'],
+                name='unique_product_review_per_user',
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.product.name} — {self.author.username} ({self.rating}/5)'

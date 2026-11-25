@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import MinLengthValidator, MaxLengthValidator
 import re
-from .models import Product, Category, Brand, Tag
+from .models import Product, Category, Brand, Tag, ProductReview
 
 
 class ProductForm(forms.ModelForm):
@@ -85,3 +85,30 @@ class ProductForm(forms.ModelForm):
         if not re.match(r'^[A-Za-zА-Яа-яЁё0-9 -]+$', value):
             raise forms.ValidationError("Недопустимые символы")
         return value
+
+class ReviewForm(forms.ModelForm):
+    rating = forms.ChoiceField(
+        choices=ProductReview.RATING_CHOICES,
+        label='Оценка',
+        widget=forms.Select(attrs={'class': 'select'}),
+    )
+    comment = forms.CharField(
+        required=False,
+        max_length=1000,
+        label='Комментарий',
+        widget=forms.Textarea(attrs={
+            'class': 'select select--full',
+            'rows': 4,
+            'placeholder': 'Введите текст комментария...',
+        }),
+    )
+
+    class Meta:
+        model = ProductReview
+        fields = ['rating', 'comment']
+
+    def clean_rating(self):
+        return int(self.cleaned_data['rating'])
+
+    def clean_comment(self):
+        return self.cleaned_data.get('comment', '').strip()

@@ -1,12 +1,14 @@
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.db.models import Q, Avg, Count, Sum, F, Value, FloatField, Case, When, CharField
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage
+from django.urls import reverse
 from django.utils.text import slugify
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from .models import Product, Category, Brand, Tag
-from .forms import ProductForm
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
+from .models import Product, Category, Brand, Tag, ProductReview
+from .forms import ProductForm, ReviewForm
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
@@ -229,10 +231,25 @@ class ProductDetailView(DataMixin, DetailView):
                 savings = float(product.old_price) - float(product.price)
             except Exception:
                 savings = None
+
+        reviews = product.reviews.select_related('author').all()
+        rating_stats = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            reviews_count=Count('id'),
+        )
+        user_review = None
+        if self.request.user.is_authenticated:
+            user_review = reviews.filter(author=self.request.user).first()
+
         extras = self.get_user_context(**{
             'similar_products': similar_products,
             'title': product.name,
-            'savings': savings
+            'savings': savings,
+            'reviews': reviews,
+            'avg_rating': rating_stats['avg_rating'],
+            'reviews_count': rating_stats['reviews_count'],
+            'user_review': user_review,
+            'rating_range': [5, 4, 3, 2, 1],
         })
         context.update(extras)
         return context
@@ -452,3 +469,57 @@ class ProductDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DataMixin, 
     def get_success_url(self):
         messages.success(self.request, 'Товар удалён')
         return redirect('product_list').url
+
+class ProductReviewView(LoginRequiredMixin, View):
+    def post(self, request, product_slug):
+        product = get_object_or_404(Product.objects.published(), slug=product_slug)
+        try:
+            rating = int(request.POST.get('rating', 0))
+        except (TypeError, ValueError):
+            rating = 0
+
+        if rating < 1 or rating > 5:
+            messages.error(request, 'Выберите корректную оценку от 1 до 5.')
+            return redirect('product_detail', product_slug=product.slug)
+
+        comment = (request.POST.get('comment') or '').strip()
+        _, created = ProductReview.objects.update_or_create(
+            product=product,
+            author=request.user,
+            defaults={'rating': rating, 'comment': comment},
+        )
+        if created:
+            messages.success(request, f'Оценка {rating} из 5 сохранена.')
+        else:
+            messages.success(request, f'Ваша оценка обновлена: {rating} из 5.')
+        return redirect('product_detail', product_slug=product.slug)
+
+
+class ReviewUpdateView(LoginRequiredMixin, UserPassesTestMixin, DataMixin, UpdateView):
+    model = ProductReview
+    form_class = ReviewForm
+    template_name = 'catalog/review_edit.html'
+    context_object_name = 'review'
+
+    def test_func(self):
+        return self.get_object().author_id == self.request.user.id
+
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            raise PermissionDenied('Редактировать комментарий может только его автор.')
+        return super().handle_no_permission()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        extras = self.get_user_context(
+            title=f'Редактирование отзыва: {self.object.product.name}'
+        )
+        context.update(extras)
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Комментарий успешно обновлён.')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('product_detail', kwargs={'product_slug': self.object.product.slug})
